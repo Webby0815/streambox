@@ -49,7 +49,11 @@ button:hover,.buttonlink:hover{filter:brightness(1.08)}
 .delete-pending{border-color:var(--danger,#b91c1c)!important;background:linear-gradient(135deg,rgba(185,28,28,.18),var(--status,#101010))}
 .badge{display:inline-block;margin-top:10px;padding:7px 10px;border-radius:999px;font-weight:800}
 .badge.danger{background:var(--danger,#b91c1c);color:#fff}
-
+@media(max-width:900px){
+  .navlinks.menu{display:grid;grid-template-columns:1fr;width:100%}
+  .submenu{position:static;display:block;margin-top:6px;box-shadow:none}
+  .menu-title,.logout-link{width:100%;justify-content:space-between}
+}
 
 
 /* ===== FIXED DROPDOWN MENU ===== */
@@ -125,53 +129,27 @@ button:hover,.buttonlink:hover{filter:brightness(1.08)}
 
 @media(max-width:900px){
 
-  .mobile-menu-icon{
-    display:block;
-    font-size:32px;
-    cursor:pointer;
-    user-select:none;
-    color:var(--text,#fff);
-  }
-
-  .topbar{
-    flex-wrap:wrap;
-  }
-
-  .grid{
-    --card-min: 140px;
-    --gap: 12px;
-  }
-
   .navlinks.menu{
-    display:none;
+    display:grid;
     grid-template-columns:1fr;
     width:100%;
   }
 
-  #mobile-menu-toggle:checked ~ .navlinks.menu{
-    display:grid;
-  }
-
   .submenu{
     position:static;
-    display:none;
+    display:block;
     margin-top:6px;
     min-width:unset;
-    box-shadow:none;
-  }
-
-  .menu-group:hover .submenu,
-  .menu-group:focus-within .submenu,
-  .menu-group:active .submenu{
-    display:block;
   }
 
   .menu-title,
   .logout-link{
     width:100%;
-    justify-content:space-between;
   }
 }
-.mobile-menu-icon{
-  display:none;
-}
+
+.footer{padding:18px;text-align:center;color:var(--muted,#999);font-size:.9rem}
+.badge{display:inline-flex;align-items:center;width:max-content;padding:7px 12px;border-radius:999px;font-size:.82rem;font-weight:700;background:rgba(255,255,255,.08);margin-top:10px}
+.badge.success{background:rgba(22,163,74,.2);color:#6ee7a0}
+.badge.danger{background:rgba(185,28,28,.25);color:#ff9c9c}
+pre{white-space:pre-wrap;overflow:auto}

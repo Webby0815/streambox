@@ -14,8 +14,6 @@
 <body class="theme-{{ theme }}">
 <nav class="topbar">
   <a class="brand" href="/">StreamBox</a>
-  <input type="checkbox" id="mobile-menu-toggle" hidden>
-  <label for="mobile-menu-toggle" class="mobile-menu-icon">☰</label>
   <div class="navlinks menu">
     <div class="menu-group">
       <a class="menu-title" href="/">Mediathek</a>
@@ -43,6 +41,7 @@
       <div class="submenu">
         <a href="/admin/users">Benutzer</a>
         <a href="/admin/status">Status</a>
+        <a href="/admin/updates">Updates</a>
         <a href="/admin/domains">Domains</a>
         <a href="/trash">Papierkorb</a>
       </div>
@@ -61,5 +60,6 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/service-worker.js").catch(() => {});
 }
 </script>
+<footer class="footer">StreamBox v{{ APP_VERSION }}</footer>
 </body>
 </html>

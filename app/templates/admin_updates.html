@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% set title = "Updates" %}
+{% block content %}
+<header class="hero">
+  <h1>Updates</h1>
+  <p>StreamBox Versionierung und GitHub-Update</p>
+</header>
+
+<main>
+<section class="panel">
+  <h2>Aktuelle Installation</h2>
+  <div class="queue-item">
+    <strong>Version:</strong> {{ status.version }}<br>
+    <strong>Branch:</strong> {{ status.branch }}<br>
+    <strong>Commit:</strong> {{ status.commit }}<br>
+    <strong>Remote:</strong> {{ status.remote }}<br>
+    {% if status.latest_tag %}
+      <strong>Letzter GitHub-Tag:</strong> {{ status.latest_tag }}<br>
+    {% endif %}
+    {% if status.behind is not none %}
+      <strong>Commits hinter GitHub:</strong> {{ status.behind }}<br>
+    {% endif %}
+  </div>
+
+  {% if status.update_available %}
+    <div class="badge success">Update verfügbar</div>
+  {% elif status.fetch_ok %}
+    <div class="badge">Aktuell</div>
+  {% else %}
+    <div class="badge danger">GitHub-Status konnte nicht geprüft werden</div>
+    <pre>{{ status.fetch_message }}</pre>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <h2>Update starten</h2>
+  <p>Startet: Backup → git pull → docker compose build → docker compose up.</p>
+  <form method="post" action="/admin/updates/run" onsubmit="return confirm('Update jetzt starten?');">
+    <button>GitHub Update starten</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Nur neu bauen</h2>
+  <p>Nützlich nach lokalen Änderungen an Templates, CSS, Python oder Dockerfile.</p>
+  <form method="post" action="/admin/rebuild" onsubmit="return confirm('Docker neu bauen und starten?');">
+    <button>Docker neu bauen</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Update Logs</h2>
+  {% for log in logs %}
+    <p><a class="buttonlink" href="/admin/update-log/{{ log.name }}">{{ log.name }}</a></p>
+  {% else %}
+    <p>Noch keine Update-Logs vorhanden.</p>
+  {% endfor %}
+</section>
+</main>
+{% endblock %}

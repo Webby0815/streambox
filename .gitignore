@@ -1,0 +1,19 @@
+# StreamBox runtime data
+data/
+downloads/
+music/
+thumbnails/
+posters/
+subtitles/
+trash/
+cookies/
+backups/
+minidlna-cache/
+*.db
+*.sqlite
+*.db-wal
+*.db-shm
+.env
+__pycache__/
+*.pyc
+.DS_Store

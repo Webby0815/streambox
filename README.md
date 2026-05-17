@@ -107,3 +107,55 @@ docker compose down
 docker compose build --no-cache
 docker compose up -d
 ```
+
+
+## Web-Update-System
+
+Diese Version enthält:
+
+- `VERSION`
+- Admin-Seite `/admin/updates`
+- Versionsanzeige
+- GitHub-Status
+- Update-Button
+- Backup vor Update
+- `git pull`
+- Docker Rebuild
+- Update-Logs
+
+### Wichtig
+
+Das Projekt muss ein GitHub-Repo sein:
+
+```bash
+cd "/media/pi/EXTERN HDD/Streambox/SYSTEM"
+git remote -v
+```
+
+Falls kein Remote vorhanden:
+
+```bash
+git remote add origin https://github.com/DEINNAME/streambox.git
+git branch -M main
+git push -u origin main
+```
+
+### Update per Website
+
+Browser:
+
+```text
+/admin/updates
+```
+
+Button:
+
+```text
+GitHub Update starten
+```
+
+### Manuell
+
+```bash
+./update_from_github.sh
+```

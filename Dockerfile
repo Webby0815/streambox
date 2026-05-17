@@ -11,6 +11,7 @@ deb http://deb.debian.org/debian-security bookworm-security main\n' > /etc/apt/s
     && apt-get install -y --no-install-recommends \
         ffmpeg \
         curl \
+        git \
         ca-certificates \
         libffi-dev \
     && rm -rf /var/lib/apt/lists/*

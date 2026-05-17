@@ -15,13 +15,13 @@ import urllib.request
 from datetime import datetime, time
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
-from contextlib import contextmanager
 
 from flask import Flask, render_template, request, jsonify, send_from_directory, abort, redirect, url_for, session, flash
 from flask_socketio import SocketIO
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
+BASE_DIR = Path("/srv/streambox")
 DATA_DIR = Path("/srv/streambox/data")
 DOWNLOAD_DIR = DATA_DIR / "downloads"
 THUMB_DIR = DATA_DIR / "thumbnails"
@@ -68,6 +68,57 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "raspi-secret-key")
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
+
+VERSION_FILE = BASE_DIR / "VERSION"
+
+def app_version():
+    try:
+        return VERSION_FILE.read_text(encoding="utf-8").strip()
+    except Exception:
+        return "dev"
+
+def git_output(args, timeout=20):
+    try:
+        res = subprocess.run(
+            ["git"] + args,
+            cwd=str(BASE_DIR),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=timeout,
+        )
+        return res.returncode, res.stdout.strip()
+    except Exception as e:
+        return 1, str(e)
+
+def git_update_status():
+    current = app_version()
+    branch_code, branch = git_output(["rev-parse", "--abbrev-ref", "HEAD"])
+    local_code, local = git_output(["rev-parse", "--short", "HEAD"])
+    remote_code, remote_url = git_output(["remote", "get-url", "origin"])
+
+    fetch_code, fetch_out = git_output(["fetch", "--tags", "--quiet"], timeout=45)
+    behind_code, behind = git_output(["rev-list", "--count", "HEAD..@{u}"])
+    tags_code, latest_tag = git_output(["describe", "--tags", "--abbrev=0", "@{u}"])
+
+    try:
+        behind_count = int(behind.strip())
+    except Exception:
+        behind_count = None
+
+    return {
+        "version": current,
+        "branch": branch if branch_code == 0 else "unbekannt",
+        "commit": local if local_code == 0 else "unbekannt",
+        "remote": remote_url if remote_code == 0 else "kein Git Remote",
+        "fetch_ok": fetch_code == 0,
+        "fetch_message": fetch_out,
+        "behind": behind_count,
+        "latest_tag": latest_tag if tags_code == 0 else "",
+        "update_available": bool(behind_count and behind_count > 0),
+    }
+
+
 JOBS = {}
 JOBS_LOCK = threading.Lock()
 DOWNLOAD_QUEUE = queue.Queue()
@@ -77,7 +128,6 @@ CANCELLED = set()
 TELEGRAM_STARTED = False
 
 
-@contextmanager
 def db():
     con = sqlite3.connect(DB_PATH, timeout=30, check_same_thread=False)
     con.row_factory = sqlite3.Row
@@ -86,10 +136,7 @@ def db():
         con.execute("PRAGMA journal_mode=WAL")
     except Exception:
         pass
-    try:
-        yield con
-    finally:
-        con.close()
+    return con
 
 
 def column_exists(con, table, column):
@@ -158,12 +205,6 @@ def init_db():
             ("subtitle", "TEXT")
         ]:
             add_column_if_missing(con, "videos", col, definition)
-
-        con.execute("CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category)")
-        con.execute("CREATE INDEX IF NOT EXISTS idx_videos_is_deleted ON videos(is_deleted)")
-        con.execute("CREATE INDEX IF NOT EXISTS idx_videos_series ON videos(series)")
-        con.execute("CREATE INDEX IF NOT EXISTS idx_videos_file_hash ON videos(file_hash)")
-        con.execute("CREATE INDEX IF NOT EXISTS idx_videos_source_url ON videos(source_url)")
 
         con.execute("""
             CREATE TABLE IF NOT EXISTS download_jobs (
@@ -422,18 +463,9 @@ def compute_hash(path, max_bytes=128 * 1024 * 1024):
 
 
 def newest_mp4_after(start_ts):
-    newest = None
-    max_mtime = 0
-    try:
-        for entry in os.scandir(DOWNLOAD_DIR):
-            if entry.is_file() and entry.name.endswith(".mp4"):
-                mtime = entry.stat().st_mtime
-                if mtime >= start_ts - 2 and mtime > max_mtime:
-                    max_mtime = mtime
-                    newest = Path(entry.path)
-    except Exception:
-        pass
-    return newest
+    files = [f for f in DOWNLOAD_DIR.glob("*.mp4") if f.stat().st_mtime >= start_ts - 2]
+    files = sorted(files, key=lambda f: f.stat().st_mtime, reverse=True)
+    return files[0] if files else None
 
 
 def dlna_marker():
@@ -689,19 +721,10 @@ def run_download(job_id, url, category, series, season, episode, age_rating, cre
             return
 
         if media_type == "audio":
-            newest_audio = None
-            max_mtime_audio = 0
-            try:
-                for entry in os.scandir(MUSIC_DIR):
-                    if entry.is_file() and entry.name.endswith(".mp3"):
-                        mtime = entry.stat().st_mtime
-                        if mtime >= start_ts - 2 and mtime > max_mtime_audio:
-                            max_mtime_audio = mtime
-                            newest_audio = Path(entry.path)
-            except Exception:
-                pass
+            audio_files = [f for f in MUSIC_DIR.glob("*.mp3") if f.stat().st_mtime >= start_ts - 2]
+            audio_files = sorted(audio_files, key=lambda f: f.stat().st_mtime, reverse=True)
 
-            if not newest_audio:
+            if not audio_files:
                 msg = "Keine MP3-Datei gefunden"
                 set_job(job_id, status="error", message=msg)
                 with db() as con:
@@ -710,7 +733,7 @@ def run_download(job_id, url, category, series, season, episode, age_rating, cre
                 save_queue_file()
                 return
 
-            audio_path = newest_audio
+            audio_path = audio_files[0]
             title = clean_title(audio_path.name)
             file_hash = compute_hash(audio_path)
 
@@ -961,7 +984,7 @@ def start_telegram():
 
 @app.context_processor
 def inject_user():
-    return {"me": current_user(), "available_themes": AVAILABLE_THEMES}
+    return {"me": current_user(), "available_themes": AVAILABLE_THEMES, "APP_VERSION": app_version()}
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -1718,18 +1741,9 @@ def load_average():
 def folder_size(path):
     total = 0
     try:
-        stack = [str(path)]
-        while stack:
-            current_dir = stack.pop()
-            try:
-                with os.scandir(current_dir) as it:
-                    for entry in it:
-                        if entry.is_file(follow_symlinks=False):
-                            total += entry.stat(follow_symlinks=False).st_size
-                        elif entry.is_dir(follow_symlinks=False):
-                            stack.append(entry.path)
-            except Exception:
-                continue
+        for p in Path(path).rglob("*"):
+            if p.is_file():
+                total += p.stat().st_size
     except Exception:
         pass
     return total
@@ -1743,6 +1757,72 @@ def admin_migrate_db():
     init_db()
     flash("Datenbank-Migration ausgeführt.")
     return redirect(url_for("admin_status"))
+
+
+@app.route("/admin/updates")
+@login_required
+@role_required("admin")
+def admin_updates():
+    status = git_update_status()
+    log_dir = DATA_DIR / "update_logs"
+    logs = []
+    try:
+        logs = sorted(log_dir.glob("update_*.log"), key=lambda p: p.stat().st_mtime, reverse=True)[:5]
+    except Exception:
+        logs = []
+    return render_template("admin_updates.html", status=status, logs=logs)
+
+
+@app.route("/admin/updates/run", methods=["POST"])
+@login_required
+@role_required("admin")
+def admin_updates_run():
+    script = BASE_DIR / "update_from_github.sh"
+    if not script.exists():
+        flash("Update-Script fehlt: update_from_github.sh")
+        return redirect(url_for("admin_updates"))
+
+    subprocess.Popen(
+        ["bash", str(script)],
+        cwd=str(BASE_DIR),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    flash("Update wurde gestartet. Bitte 1-5 Minuten warten und dann die Seite neu laden.")
+    return redirect(url_for("admin_updates"))
+
+
+@app.route("/admin/rebuild", methods=["POST"])
+@login_required
+@role_required("admin")
+def admin_rebuild():
+    script = BASE_DIR / "rebuild.sh"
+    if not script.exists():
+        flash("Rebuild-Script fehlt: rebuild.sh")
+        return redirect(url_for("admin_updates"))
+
+    subprocess.Popen(
+        ["bash", str(script)],
+        cwd=str(BASE_DIR),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    flash("Rebuild wurde gestartet. Bitte kurz warten.")
+    return redirect(url_for("admin_updates"))
+
+
+@app.route("/admin/update-log/<path:name>")
+@login_required
+@role_required("admin")
+def admin_update_log(name):
+    safe = Path(name).name
+    log_file = DATA_DIR / "update_logs" / safe
+    if not log_file.exists():
+        abort(404)
+    return "<pre>" + log_file.read_text(encoding="utf-8", errors="replace")[-20000:] + "</pre>"
+
 
 @app.route("/admin/status")
 @login_required
