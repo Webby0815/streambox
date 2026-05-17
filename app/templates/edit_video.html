@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% set title = "Video bearbeiten" %}{% block content %}
+<header class="hero"><h1>Video bearbeiten</h1><p>{{ video.title }}</p></header>
+<main><section class="panel">
+<form method="post">
+<input name="title" value="{{ video.title }}" placeholder="Titel">
+<input name="category" value="{{ video.category or 'Filme' }}" placeholder="Kategorie">
+<input name="series" value="{{ video.series or '' }}" placeholder="Serie">
+<input name="season" value="{{ video.season or '' }}" placeholder="Staffel">
+<input name="episode" value="{{ video.episode or '' }}" placeholder="Folge">
+<input name="age_rating" value="{{ video.age_rating or 0 }}" placeholder="FSK">
+<input name="year" value="{{ video.year or '' }}" placeholder="Jahr">
+<input name="genre" value="{{ video.genre or '' }}" placeholder="Genre">
+<input name="actors" value="{{ video.actors or '' }}" placeholder="Schauspieler">
+<textarea name="description" placeholder="Beschreibung">{{ video.description or '' }}</textarea>
+<input name="tags" value="{{ video.tags or '' }}" placeholder="Tags, Komma getrennt">
+<button>Speichern</button><a class="buttonlink" href="/watch/{{ video.id }}">Zurück</a>
+</form>
+<form method="post" action="/admin/video/{{ video.id }}/metadata"><button>Metadaten automatisch laden</button></form>
+</section></main>{% endblock %}

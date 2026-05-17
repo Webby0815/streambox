@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% set title = "Serien" %}{% block content %}
+<header class="hero"><h1>Serien</h1><p>Serien → Staffeln → Folgen</p></header>
+<main>
+{% for series, seasons in grouped.items() %}
+<section class="panel">
+<h2>{{ series }}</h2>
+{% for season, eps in seasons.items() %}
+<h3>Staffel {{ season }}</h3>
+<div class="grid">
+{% for video in eps %}
+<article class="card"><a href="/watch/{{ video.id }}" class="card-link">
+{% if video.poster %}<img src="/posters/{{ video.poster }}">{% elif video.thumbnail %}<img src="/thumbs/{{ video.thumbnail }}">{% else %}<div class="no-thumb">▶</div>{% endif %}
+<div class="card-text"><h3>Folge {{ video.episode or '?' }}: {{ video.title }}</h3><p>{{ video.year }} {{ video.genre }}</p></div>
+</a></article>
+{% endfor %}
+</div>
+{% endfor %}
+</section>
+{% else %}<div class="empty">Noch keine Serien vorhanden.</div>{% endfor %}
+</main>{% endblock %}

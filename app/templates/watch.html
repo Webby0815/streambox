@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% set title = video.title %}{% block content %}
+<main class="watch"><a href="/">← Zurück</a><h1>{{ video.title }}</h1>
+{% if video.filename.startswith("music/") %}
+<div class="audio-hero">
+  {% if video.poster %}<img src="/posters/{{ video.poster }}" alt="{{ video.title }}">{% else %}<div class="audio-disc">♪</div>{% endif %}
+  <audio id="player" class="audio-player" controls autoplay preload="metadata">
+    <source src="/media/{{ video.filename }}" type="audio/mpeg">
+  </audio>
+</div>
+{% else %}
+<video id="player" class="player" controls autoplay preload="metadata">
+<source src="/media/{{ video.filename }}" type="video/mp4">
+{% if video.subtitle %}<track kind="subtitles" srclang="de" label="Untertitel" src="/subs/{{ video.subtitle }}" default>{% endif %}
+</video>
+{% endif %}
+<section class="panel meta-panel">
+{% if video.poster %}<img class="poster-detail" src="/posters/{{ video.poster }}">{% endif %}
+<div><p>{{ video.year }} · {{ video.genre }} · FSK {{ video.age_rating or 0 }}</p>{% if video.actors %}<p><b>Schauspieler:</b> {{ video.actors }}</p>{% endif %}{% if video.description %}<p>{{ video.description }}</p>{% endif %}{% if video.tags %}<p>Tags: {{ video.tags }}</p>{% endif %}</div>
+</section>
+<div class="actions"><form method="post" action="/favorite/{{ video.id }}"><button>{% if fav %}★ Favorit entfernen{% else %}☆ Favorit{% endif %}</button></form>
+{% if next_episode %}<a class="buttonlink" href="/watch/{{ next_episode.id }}">Nächste Folge</a>{% endif %}
+{% if me.role == "admin" %}<a class="buttonlink" href="/admin/video/{{ video.id }}">Metadaten bearbeiten</a><form method="post" action="/delete/{{ video.id }}" onsubmit="return confirm('Wirklich löschen?');"><button class="danger">In Papierkorb</button></form>{% endif %}</div>
+</main><script>
+const player=document.getElementById("player");const startPos={{ hist.position if hist else 0 }};player.addEventListener("loadedmetadata",()=>{if(startPos>10)player.currentTime=startPos;});setInterval(()=>{if(!player.paused){fetch("/api/watch/{{ video.id }}",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({position:player.currentTime,duration:player.duration||0})});}},5000);
+{% if next_episode %}
+player.addEventListener("ended",()=>{ location.href="/watch/{{ next_episode.id }}"; });
+{% endif %}
+</script>{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% set title = "Benutzerverwaltung" %}{% block content %}
+<header class="hero"><h1>Benutzerverwaltung</h1></header><main>
+<section class="panel"><h2>Benutzer anlegen</h2><form method="post" action="/admin/users/create" class="form-grid">
+<input name="username" placeholder="Name" required><input name="password" placeholder="Passwort" required>
+<select name="role"><option value="viewer">Zuschauer</option><option value="downloader">Downloader</option><option value="admin">Admin</option></select>
+<input name="allowed_categories" placeholder="Kategorien, Komma getrennt"><input name="min_age" placeholder="FSK max" value="0">
+<select name="theme">{% for key,label in available_themes.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select><button>Anlegen</button></form></section>
+<section class="panel"><h2>Benutzer</h2>{% for u in users %}
+<form method="post" action="/admin/users/update/{{ u.id }}" class="user-row"><strong>{{ u.username }}</strong>
+<select name="role"><option value="viewer" {% if u.role=="viewer" %}selected{% endif %}>Zuschauer</option><option value="downloader" {% if u.role=="downloader" %}selected{% endif %}>Downloader</option><option value="admin" {% if u.role=="admin" %}selected{% endif %}>Admin</option></select>
+<input name="allowed_categories" value="{{ u.allowed_categories or '' }}" placeholder="Kategorien"><input name="min_age" value="{{ u.min_age or 0 }}" placeholder="FSK max">
+<select name="theme">{% for key,label in available_themes.items() %}<option value="{{ key }}" {% if (u.theme or "netflix") == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+<input name="password" placeholder="Neues Passwort optional"><button>Speichern</button></form>
+<form method="post" action="/admin/users/delete/{{ u.id }}" onsubmit="return confirm('Benutzer wirklich löschen?');"><button class="danger">Löschen</button></form><hr>{% endfor %}</section></main>{% endblock %}

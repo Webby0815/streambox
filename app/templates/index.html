@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% set title = "Mediathek" %}{% block content %}
+<header class="hero"><h1>Mediathek</h1><p>{{ me.role }} · {{ available_themes.get(me.theme or "netflix") }}</p></header>
+<main>
+<section class="panel filter-panel"><form class="search" method="get">
+<input name="q" value="{{ q }}" placeholder="Suchen nach Titel, Genre, Schauspieler, Tags">
+<select name="category"><option value="">Alle Kategorien</option>{% for c in categories %}<option value="{{ c.category }}" {% if selected_category == c.category %}selected{% endif %}>{{ c.category }} ({{ c.count }})</option>{% endfor %}</select>
+<button>Suchen</button><a class="buttonlink" href="/?fav=1">Favoriten</a><a class="buttonlink" href="/?continue=1">Weiter schauen</a><a class="buttonlink" href="/random">Zufall</a>
+</form></section>
+{% if grouped %}{% for category, items in grouped.items() %}
+<section class="category-section"><h2>{{ category }} <span>{{ items|length }}</span></h2><div class="grid">
+{% for video in items %}
+<article class="card"><a href="/watch/{{ video.id }}" class="card-link">
+{% if video.poster %}<img src="/posters/{{ video.poster }}" alt="{{ video.title }}">{% elif video.thumbnail %}<img src="/thumbs/{{ video.thumbnail }}" alt="{{ video.title }}">{% else %}<div class="no-thumb">▶</div>{% endif %}
+<div class="card-text"><h3>{{ video.title }}</h3><p>{{ video.year }} {{ video.genre }}</p><p>{{ video.category }} · FSK {{ video.age_rating or 0 }}</p>
+{% if video.series %}<p>{{ video.series }} S{{ video.season or 0 }}E{{ video.episode or 0 }}</p>{% endif %}
+{% if history.get(video.id) %}<p>Weiter bei {{ history[video.id].position|int }}s</p>{% endif %}</div>
+</a><div class="card-actions"><form method="post" action="/favorite/{{ video.id }}"><button>{% if video.id in favorites %}★{% else %}☆{% endif %}</button></form>
+{% if me.role == "admin" %}<a class="buttonlink small" href="/admin/video/{{ video.id }}">Bearbeiten</a><form method="post" action="/delete/{{ video.id }}" onsubmit="return confirm('Wirklich löschen? Video wird in den Papierkorb verschoben.');"><button class="danger">Löschen</button></form>{% endif %}</div>
+</article>{% endfor %}</div></section>{% endfor %}
+{% else %}<div class="empty">Keine Videos gefunden.</div>{% endif %}
+</main>{% endblock %}

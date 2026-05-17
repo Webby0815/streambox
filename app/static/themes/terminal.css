@@ -1,0 +1,1 @@
+:root{--bg:#050505;--topbar:#000;--panel:#0a0a0a;--card:#0c0c0c;--input:#000;--status:#000;--line:#555;--text:#f5f5f5;--muted:#bdbdbd;--accent:#ffb000;--button-text:#000;--danger:#ff3333;--hero:linear-gradient(135deg,#111,#050505);--font:'Courier New',monospace;--radius:0;--hover-scale:1;--poster-ratio:16/9;} .card,.panel,input,button,select,textarea{border-radius:0!important}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set title = "Papierkorb" %}
+{% block content %}
+<header class="hero">
+  <h1>Papierkorb</h1>
+  <p>Endgültiges Löschen wird nur vorgemerkt. Die echte Dateilöschung läuft nachts per Cron.</p>
+</header>
+
+<main>
+<section class="panel">
+{% for v in videos %}
+  <div class="queue-item {% if v.delete_pending %}delete-pending{% endif %}">
+    <strong>{{ v.title }}</strong><br>
+    <small>{{ v.filename }}</small>
+
+    {% if v.delete_pending %}
+      <div class="badge danger">Zur endgültigen Löschung vorgemerkt</div>
+      <p class="hint">Vorgemerkt am: {{ v.delete_pending_at or "unbekannt" }}</p>
+      <div class="actions">
+        <form method="post" action="/trash/unmark/{{ v.id }}">
+          <button>Vormerkung zurücknehmen</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="actions">
+        <form method="post" action="/trash/restore/{{ v.id }}">
+          <button>Wiederherstellen</button>
+        </form>
+        <form method="post" action="/trash/delete/{{ v.id }}" onsubmit="return confirm('Nur zur nächtlichen endgültigen Löschung vormerken? Die Datei wird jetzt noch NICHT gelöscht.');">
+          <button class="danger">Zur Löschung vormerken</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+{% else %}
+  <p>Leer.</p>
+{% endfor %}
+</section>
+
+<section class="panel">
+  <h2>Webcron</h2>
+  <p>Diese URL löscht nachts wirklich alle vorgemerkten Dateien:</p>
+  <code>/cron/purge-trash?token=DEIN_CRON_TOKEN</code>
+</section>
+</main>
+{% endblock %}

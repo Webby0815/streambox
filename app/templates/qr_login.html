@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% set title = "QR Login" %}{% block content %}
+<header class="hero"><h1>QR Login</h1><p>Scannen und direkt einloggen.</p></header>
+<main><section class="panel"><img src="{{ qr_src }}" alt="QR Code"><p><code>{{ login_url }}</code></p><p class="hint">Behandle diesen Link wie ein Passwort.</p></section></main>{% endblock %}

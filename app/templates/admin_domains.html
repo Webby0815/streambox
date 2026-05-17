@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% set title = "Erlaubte Domains" %}
+{% block content %}
+<header class="hero"><h1>Erlaubte Domains</h1><p>Quellen verwalten, die StreamBox akzeptiert.</p></header>
+<main>
+<section class="panel"><h2>Domain hinzufügen</h2><form method="post" action="/admin/domains/create" class="domain-row"><input name="domain" placeholder="z.B. youtube.com" required><input name="note" placeholder="Notiz"><button>Hinzufügen</button></form></section>
+<section class="panel"><h2>Domains</h2>{% for d in domains %}<form method="post" action="/admin/domains/update/{{ d.id }}" class="domain-row"><input name="domain" value="{{ d.domain }}"><input name="note" value="{{ d.note or '' }}" placeholder="Notiz"><label class="checkline"><input type="checkbox" name="enabled" value="1" {% if d.enabled %}checked{% endif %}> aktiv</label><button>Speichern</button></form><form method="post" action="/admin/domains/delete/{{ d.id }}" onsubmit="return confirm('Domain wirklich löschen?');"><button class="danger">Löschen</button></form><hr>{% else %}<p>Keine Domains vorhanden.</p>{% endfor %}</section>
+<section class="panel"><h2>Hinweis</h2><p>Trage nur Domains ein, für deren Inhalte du die Rechte hast oder bei denen der Download erlaubt ist.</p></section>
+</main>{% endblock %}

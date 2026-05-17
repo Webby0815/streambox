@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% set title = "Status" %}{% block content %}
+<header class="hero"><h1>Status</h1></header><main>
+<section class="panel"><h2>Speicher</h2><p>Gesamt: {{ (usage.total/1024/1024/1024)|round(1) }} GB</p><p>Benutzt: {{ (usage.used/1024/1024/1024)|round(1) }} GB</p><p>Frei: {{ (usage.free/1024/1024/1024)|round(1) }} GB</p><p>Videodateien: {{ (media_size/1024/1024/1024)|round(2) }} GB</p></section>
+<section class="panel"><h2>System</h2><p>{{ platform_name }}</p><p>CPU-Temperatur: {% if temp %}{{ temp }} °C{% else %}nicht verfügbar{% endif %}</p><p>Load: {% if load %}{{ load[0]|round(2) }} · {{ load[1]|round(2) }} · {{ load[2]|round(2) }}{% else %}nicht verfügbar{% endif %}</p></section>
+<section class="panel"><h2>Funktionen</h2><p>TMDB: {{ "aktiv" if tmdb else "kein Key" }} · OMDb: {{ "aktiv" if omdb else "kein Key" }} · Telegram: {{ "aktiv" if telegram else "kein Token" }}</p><p>Download-Zeitplan: {% if schedule %}{{ start }}-{{ end }}{% else %}aus{% endif %} · PS4-Konvertierung: {{ "an" if transcode else "aus" }}</p><p>YouTube-Cookies: {% if cookie_exists %}vorhanden{% else %}fehlen{% endif %}</p></section>
+<section class="panel"><h2>StreamBox</h2><p>Videos: {{ videos }} · Wartend: {{ queued }} · Laufend: {{ running }} · Fehler: {{ errors }}</p><form method="post" action="/admin/backup"><button>Backup erstellen</button></form></section>
+<section class="panel"><h2>MiniDLNA</h2><p>Name: <b>{{ env.get("DLNA_NAME","StreamBox") }}</b></p><p>Rescan-Markierung: {% if marker %}vorhanden{% else %}keine{% endif %}</p><form method="post" action="/admin/dlna-marker"><button>DLNA-Rescan markieren</button></form></section>
+<section class="panel"><h2>yt-dlp</h2><form method="post" action="/admin/update-ytdlp"><button>yt-dlp aktualisieren</button></form></section>
+<section class="panel">
+<h2>Medienscan</h2>
+<p>Importiert vorhandene MP4/MP3-Dateien neu in die Datenbank und markiert MiniDLNA zum Aktualisieren.</p>
+<form method="post" action="/admin/rescan-files">
+  <button>Dateien neu einlesen + MiniDLNA aktualisieren</button>
+</form>
+</section>
+<section class="panel">
+<h2>Datenbank</h2>
+<form method="post" action="/admin/migrate-db">
+  <button>Datenbank-Migration ausführen</button>
+</form>
+<p class="hint">Nutzen, wenn nach einem Update neue Spalten fehlen.</p>
+</section>
+</main>{% endblock %}

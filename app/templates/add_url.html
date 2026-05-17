@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>An StreamBox senden</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/themes/netflix.css">
+</head>
+<body>
+<main>
+<section class="panel">
+<h1>An StreamBox senden</h1>
+{% if sent %}
+  {% if created %}
+    <p>✅ Hinzugefügt.</p>
+  {% elif skipped %}
+    <p>⚠️ Nicht hinzugefügt: {{ skipped[0].reason }}</p>
+  {% else %}
+    <p>Keine Änderung.</p>
+  {% endif %}
+  <button onclick="window.close()">Fenster schließen</button>
+{% else %}
+<form method="post">
+<label>URL</label>
+<textarea name="url" required>{{ url }}</textarea>
+
+<label>Kategorie</label>
+<select name="category">
+  <option value="Bookmarklet">Bookmarklet</option>
+  <option value="Filme">Filme</option>
+  <option value="Musik">Musik</option>
+  <option value="Serien">Serien</option>
+  {% for c in categories %}
+    <option value="{{ c.category }}">{{ c.category }} ({{ c.count }})</option>
+  {% endfor %}
+</select>
+
+<label>Typ</label>
+<select name="media_type">
+  <option value="video">Video MP4</option>
+  <option value="audio">Audio MP3</option>
+</select>
+
+<label class="checkline"><input type="checkbox" name="playlist" value="1"> Playlist laden</label>
+
+<button>Senden</button>
+</form>
+{% endif %}
+</section>
+</main>
+</body>
+</html>

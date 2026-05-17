@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>{{ title or "StreamBox Ultra" }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#e50914">
+<link rel="stylesheet" href="/static/style.css">
+{% set theme = (me.theme if me and me.theme else "netflix") %}
+<link rel="stylesheet" href="/static/themes/{{ theme }}.css">
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body class="theme-{{ theme }}">
+<nav class="topbar">
+  <a class="brand" href="/">StreamBox</a>
+  <input type="checkbox" id="mobile-menu-toggle" hidden>
+  <label for="mobile-menu-toggle" class="mobile-menu-icon">☰</label>
+  <div class="navlinks menu">
+    <div class="menu-group">
+      <a class="menu-title" href="/">Mediathek</a>
+      <div class="submenu">
+        <a href="/series">Serien</a>
+        <a href="/random">Zufall</a>
+        <a href="/settings/theme">Design</a>
+        <a href="/settings/qr">QR Login</a>
+      </div>
+    </div>
+
+    {% if me and me.role in ["admin","downloader"] %}
+    <div class="menu-group">
+      <a class="menu-title" href="/queue">Download</a>
+      <div class="submenu">
+        <a href="/queue">Queue</a>
+        <a href="/admin/bookmarklet">Bookmarklet</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if me and me.role == "admin" %}
+    <div class="menu-group">
+      <a class="menu-title" href="/admin/status">Admin</a>
+      <div class="submenu">
+        <a href="/admin/users">Benutzer</a>
+        <a href="/admin/status">Status</a>
+        <a href="/admin/domains">Domains</a>
+        <a href="/trash">Papierkorb</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <a class="logout-link" href="/logout">Logout</a>
+  </div>
+</nav>
+{% with messages = get_flashed_messages() %}
+{% if messages %}<div class="flash">{% for m in messages %}<div>{{ m }}</div>{% endfor %}</div>{% endif %}
+{% endwith %}
+{% block content %}{% endblock %}
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js").catch(() => {});
+}
+</script>
+</body>
+</html>

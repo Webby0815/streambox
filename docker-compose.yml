@@ -1,0 +1,48 @@
+services:
+  streambox:
+    build: .
+    container_name: streambox
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: "${SECRET_KEY}"
+      ADMIN_USER: "${ADMIN_USER}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      TMDB_API_KEY: "${TMDB_API_KEY}"
+      OMDB_API_KEY: "${OMDB_API_KEY}"
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
+      TELEGRAM_ALLOWED_CHAT_IDS: "${TELEGRAM_ALLOWED_CHAT_IDS}"
+      DOWNLOAD_SCHEDULE_ENABLED: "${DOWNLOAD_SCHEDULE_ENABLED}"
+      DOWNLOAD_WINDOW_START: "${DOWNLOAD_WINDOW_START}"
+      DOWNLOAD_WINDOW_END: "${DOWNLOAD_WINDOW_END}"
+      TRANSCODE_PS4: "${TRANSCODE_PS4}"
+      CRON_TOKEN: "${CRON_TOKEN}"
+    ports:
+      - "28050:8080"
+    volumes:
+      - "/media/pi/EXTERN HDD/Streambox/data:/srv/streambox/data"
+      - "/media/pi/EXTERN HDD/Streambox/downloads:/srv/streambox/data/downloads"
+      - "/media/pi/EXTERN HDD/Streambox/music:/srv/streambox/data/music"
+      - "/media/pi/EXTERN HDD/Streambox/posters:/srv/streambox/data/posters"
+      - "/media/pi/EXTERN HDD/Streambox/subtitles:/srv/streambox/data/subtitles"
+      - "/media/pi/EXTERN HDD/Streambox/thumbnails:/srv/streambox/data/thumbnails"
+      - "/media/pi/EXTERN HDD/Streambox/trash:/srv/streambox/data/trash"
+      - "/media/pi/EXTERN HDD/Streambox/backups:/srv/streambox/data/backups"
+      - "/media/pi/EXTERN HDD/Streambox/cookies:/srv/streambox/cookies"
+    tmpfs:
+      - /tmp:size=384m
+
+  minidlna:
+    image: vladgh/minidlna
+    container_name: minidlna
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      MINIDLNA_FRIENDLY_NAME: "${DLNA_NAME}"
+      MINIDLNA_MEDIA_DIR_1: "V,/media/videos"
+      MINIDLNA_MEDIA_DIR_2: "A,/media/music"
+      MINIDLNA_INOTIFY: "yes"
+      MINIDLNA_NOTIFY_INTERVAL: "30"
+    volumes:
+      - "/media/pi/EXTERN HDD/Streambox/downloads:/media/videos:ro"
+      - "/media/pi/EXTERN HDD/Streambox/music:/media/music:ro"
+      - "./minidlna-cache:/var/cache/minidlna"

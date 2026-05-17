@@ -1,0 +1,5 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Login</title><link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/themes/netflix.css"></head>
+<body class="login-body"><div class="login-box"><h1>StreamBox</h1>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="post"><input name="username" placeholder="Benutzername" required autofocus><input name="password" type="password" placeholder="Passwort" required><button>Login</button></form>
+<small>Standard: admin / admin123</small></div></body></html>

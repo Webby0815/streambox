@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% set title = "Queue" %}{% block content %}
+<header class="hero"><h1>Download Queue</h1><p>Wartend: {{ waiting_count }} · Läuft: {{ running_count }} · {% if paused %}Pausiert{% else %}Aktiv{% endif %} · YouTube-Cookies: {% if cookie_exists %}aktiv{% else %}fehlen{% endif %} · Zeitplan: {% if schedule %}{{ start }}-{{ end }}{% else %}aus{% endif %}</p></header>
+<main>
+<section class="panel"><h2>Neue Downloads</h2>
+<textarea id="urls" placeholder="Mehrere URLs, je Zeile eine"></textarea>
+<div class="form-grid">
+<input id="category" placeholder="Kategorie" value="Filme">
+<input id="series" placeholder="Serie">
+<input id="season" placeholder="Staffel">
+<input id="episode" placeholder="Folge">
+<input id="age_rating" placeholder="FSK" value="0">
+<input id="priority" placeholder="Priorität" value="100">
+<select id="media_type"><option value="video">Video MP4</option><option value="audio">Audio MP3</option></select>
+<label class="checkline"><input id="playlist" type="checkbox" value="1"> Playlist laden</label>
+<button onclick="startDownload()">Hinzufügen</button>
+</div>
+<div id="addResult" class="status">Bereit</div></section>
+<section class="panel actions">{% if me.role == "admin" %}<form method="post" action="/queue/pause"><button>Queue pausieren</button></form><form method="post" action="/queue/resume"><button>Queue fortsetzen</button></form>{% endif %}</section>
+<section class="panel"><h2>Einträge</h2><div class="queue-list">
+{% for job in jobs %}<div class="queue-item status-{{ job.status }}" id="job-{{ job.id }}">
+<div><strong class="job-status">{% if job.status == "running" %}In Arbeit{% elif job.status == "queued" %}Wartet{% elif job.status == "error" %}Fehler{% elif job.status == "cancelled" %}Abgebrochen{% else %}{{ job.status }}{% endif %}</strong> <span class="job-progress">{{ job.progress or "0%" }}</span></div>
+<div class="progress-wrap"><div class="progress-bar" style="width: {{ (job.progress or '0').replace('%','') }}%"></div></div><div class="job-url">{{ job.url }}</div><small>von {{ job.username or "?" }} · {{ job.category }} · {{ job.media_type or "video" }}{% if job.playlist %} · Playlist{% endif %} · Prio {{ job.priority }}</small><pre class="job-message">{{ job.message or "" }}</pre>
+<div class="actions">{% if job.status in ["error","cancelled"] %}<form method="post" action="/queue/retry/{{ job.id }}"><button>Erneut starten</button></form>{% endif %}{% if job.status in ["queued","running"] %}<form method="post" action="/queue/cancel/{{ job.id }}"><button class="danger">Abbrechen</button></form>{% endif %}{% if me.role == "admin" %}<form method="post" action="/queue/delete/{{ job.id }}" onsubmit="return confirm('Queue-Eintrag wirklich löschen?');"><button class="danger">Eintrag löschen</button></form>{% endif %}</div>
+</div>{% endfor %}</div></section>
+</main>
+<script>
+const socket=io();socket.on("job_update",data=>{const el=document.getElementById("job-"+data.job_id);if(el){el.className="queue-item status-"+(data.status||"");el.querySelector(".job-status").textContent=data.status||"";el.querySelector(".job-progress").textContent=data.progress||"0%";el.querySelector(".job-message").textContent=data.message||"";
+const bar=el.querySelector(".progress-bar"); if(bar){bar.style.width=(data.progress||"0%");}
+const st=el.querySelector(".job-status"); if(st){st.textContent=data.status==="running"?"In Arbeit":(data.status==="queued"?"Wartet":(data.status==="error"?"Fehler":(data.status==="cancelled"?"Abgebrochen":data.status||"")));}
+}if(data.status==="done")setTimeout(()=>location.reload(),1200);});
+async function startDownload(){const payload={urls:document.getElementById("urls").value,category:document.getElementById("category").value,series:document.getElementById("series").value,season:document.getElementById("season").value,episode:document.getElementById("episode").value,age_rating:document.getElementById("age_rating").value,priority:document.getElementById("priority").value,media_type:document.getElementById("media_type").value,playlist:document.getElementById("playlist").checked};const res=await fetch("/api/download",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const data=await res.json();document.getElementById("addResult").innerHTML=res.ok?`<b>${data.created_count} hinzugefügt, ${data.skipped_count} übersprungen</b>`:`<b>Fehler</b><br>${data.error}`;if(res.ok)setTimeout(()=>location.reload(),800);}
+</script>{% endblock %}

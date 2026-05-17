@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% set title = "Bookmarklet" %}{% block content %}
+<header class="hero"><h1>Bookmarklet</h1><p>Ziehe diesen Button in deine Lesezeichenleiste.</p></header>
+<main><section class="panel">
+<a class="buttonlink" href="{{ js }}">An StreamBox senden</a>
+<p>Auf YouTube, Dailymotion, Vimeo, SoundCloud usw. anklicken. Es öffnet sich ein Fenster mit Kategorie-Auswahl.</p>
+<textarea readonly>{{ js }}</textarea>
+</section></main>
+{% endblock %}

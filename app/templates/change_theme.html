@@ -1,0 +1,2 @@
+{% extends "base.html" %}{% set title = "Design wählen" %}{% block content %}
+<header class="hero"><h1>Design wählen</h1></header><main><section class="panel"><form method="post"><div class="theme-grid">{% for key,label in themes.items() %}<label class="theme-choice"><input type="radio" name="theme" value="{{ key }}" {% if (user.theme or "netflix") == key %}checked{% endif %}><span>{{ label }}</span><small>{{ key }}.css</small></label>{% endfor %}</div><button>Design speichern</button></form></section></main>{% endblock %}
