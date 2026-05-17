@@ -12,6 +12,7 @@ deb http://deb.debian.org/debian-security bookworm-security main\n' > /etc/apt/s
         ffmpeg \
         curl \
         git \
+        openssh-client \
         ca-certificates \
         libffi-dev \
     && rm -rf /var/lib/apt/lists/*
