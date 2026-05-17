@@ -480,9 +480,14 @@ def yt_dlp_command(url, out_tpl, media_type="video", playlist=False):
         "yt-dlp",
         "--newline",
         "--force-ipv4",
+
         "--user-agent",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
     ]
+
+    # -------------------------------------------------
+    # DAILYMOTION FIX
+    # -------------------------------------------------
 
     is_dailymotion = (
         host_key.endswith("dailymotion.com")
@@ -493,39 +498,105 @@ def yt_dlp_command(url, out_tpl, media_type="video", playlist=False):
         cmd.extend([
             "--add-header",
             "Referer:https://www.dailymotion.com/",
+
             "--add-header",
             "Origin:https://www.dailymotion.com",
+
             "--extractor-args",
             "dailymotion:client=web",
         ])
 
-    if COOKIE_FILE.exists():
-        cmd.extend(["--cookies", str(COOKIE_FILE)])
+    # -------------------------------------------------
+    # COOKIES NUR FÜR YOUTUBE
+    # -------------------------------------------------
+
+    is_youtube = (
+        host_key.endswith("youtube.com")
+        or host_key == "youtu.be"
+        or host_key.endswith("googlevideo.com")
+    )
+
+    if COOKIE_FILE.exists() and is_youtube:
+        cmd.extend([
+            "--cookies",
+            str(COOKIE_FILE)
+        ])
+
+    # -------------------------------------------------
+    # AUDIO
+    # -------------------------------------------------
 
     if media_type == "audio":
+
         if "soundcloud.com" in host_key:
             cmd.extend([
                 "--ignore-errors",
+
                 "--extractor-args",
                 "soundcloud:formats=download,hls_opus,hls_mp3,progressive",
             ])
 
         cmd.extend([
-            "-f", "bestaudio/best",
+            "-f",
+            "bestaudio/best",
+
             "-x",
-            "--audio-format", "mp3",
-            "--audio-quality", "0",
+
+            "--audio-format",
+            "mp3",
+
+            "--audio-quality",
+            "0",
+
             "--embed-thumbnail",
+
             "--add-metadata",
+
             "--restrict-filenames",
-            "-o", str(MUSIC_DIR / "%(title).200s [%(id)s].%(ext)s"),
+
+            "-o",
+            str(MUSIC_DIR / "%(title).200s [%(id)s].%(ext)s"),
         ])
 
         if not playlist:
             cmd.append("--no-playlist")
 
         cmd.append(normalized)
+
         return cmd
+
+    # -------------------------------------------------
+    # VIDEO
+    # -------------------------------------------------
+
+    cmd.extend([
+        "-f",
+        "bv*+ba/b/best",
+
+        "--merge-output-format",
+        "mp4",
+
+        "--write-subs",
+        "--write-auto-subs",
+
+        "--sub-langs",
+        "de,en",
+
+        "--convert-subs",
+        "srt",
+
+        "--restrict-filenames",
+
+        "-o",
+        out_tpl,
+    ])
+
+    if not playlist:
+        cmd.append("--no-playlist")
+
+    cmd.append(normalized)
+
+    return cmd
 
     cmd.extend([
         "-f", "bv*+ba/b/best",
